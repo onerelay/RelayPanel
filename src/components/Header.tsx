@@ -1,7 +1,7 @@
 // src/components/Header.tsx
 import { useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { Home, CircleUserRound, LogOut, Loader2 } from 'lucide-react'
+import { Home, FileCodeIcon, CircleUserRound, LogOut, Loader2 } from 'lucide-react'
 import { BRAND_PREFIX, BRAND_SUFFIX, LOGO_PATH } from '../config'
 import Portal from './Portal'
 
@@ -38,6 +38,7 @@ export default function Header() {
 
   const navItems = [
     { to: '/', label: 'Home', icon: Home, exact: true },
+    { to: '/quest', label: 'Quest', icon: FileCodeIcon, exact: true },
   ]
 
   const baseButtonClass = "px-3 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center gap-1.5"
