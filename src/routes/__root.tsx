@@ -1,6 +1,7 @@
 // src/routes/__root.tsx
 import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
 import { Link } from '@tanstack/react-router'
+import { Analytics } from '@vercel/analytics/react'
 
 import Header from '../components/Header'
 import { Footer } from '../components/Footer'
@@ -62,6 +63,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           <Footer />
         </div>
 
+        <Analytics />
         <Scripts />
       </body>
     </html>
