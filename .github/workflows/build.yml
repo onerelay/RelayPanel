@@ -1,10 +1,8 @@
 name: Build and Deploy to Production Branch
 
 on:
-  # Trigger on pushes to your main development branch
   push:
-    branches: [ "main" ]   # <-- Change this to your source branch (e.g., master, develop)
-  # Allow manual trigger from Actions tab
+    branches: [ "main" ]   # Change to your source branch
   workflow_dispatch:
 
 jobs:
@@ -12,60 +10,59 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      # Step 1: Checkout the source code (with full history for branch creation)
       - name: Checkout source
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Fetch all history to allow branch operations
+          fetch-depth: 0
 
-      # Step 2: Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22   # Updated to match project requirement (>=22.12.0)
           cache: 'npm'
 
-      # Step 3: Install dependencies
       - name: Install dependencies
         run: npm ci
 
-      # Step 4: Build the project
       - name: Build project
         run: npm run build
 
-      # Step 5: Prepare the production branch
+      # Save build output to a temporary location
+      - name: Save build output
+        run: |
+          mkdir -p /tmp/relaypanel-build
+          cp -r dist/* /tmp/relaypanel-build/ 2>/dev/null || true
+          cp -r dist/.* /tmp/relaypanel-build/ 2>/dev/null || true
+
+      # Prepare production branch
       - name: Prepare production branch
         run: |
-          # Configure git
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          # Try to switch to production branch if it exists, else create orphan branch
+          # Switch to or create production branch
           if git ls-remote --heads origin production | grep production; then
             git checkout production
           else
             git checkout --orphan production
-            # Remove all files from the working tree
-            git rm -rf . > /dev/null 2>&1 || true
           fi
+          
+          # Remove all files except .git
+          find . -maxdepth 1 ! -name '.git' ! -name '.' ! -name '..' -exec rm -rf {} \;
 
-      # Step 6: Copy the built files to the root of the production branch
+      # Copy build output from temporary location
       - name: Copy build output
         run: |
-          # Remove existing files (except maybe .git)
-          find . -maxdepth 1 ! -name '.git' ! -name '.' ! -name '..' -exec rm -rf {} \;
-          # Copy the new build from the source branch's dist folder
-          cp -r ../dist/* . 2>/dev/null || true
-          cp ../dist/.* . 2>/dev/null || true  # Also copy hidden files if any
+          cp -r /tmp/relaypanel-build/* . 2>/dev/null || true
+          cp -r /tmp/relaypanel-build/.* . 2>/dev/null || true
 
-      # Step 7: Commit and push the changes to production branch
+      # Commit and push
       - name: Commit and push
         run: |
           git add .
-          # Only commit if there are changes
           if git diff --staged --quiet; then
             echo "No changes to commit."
             exit 0
           fi
           git commit -m "Deploy production build from commit ${{ github.sha }}"
-          git push origin production --force  # Force push to keep branch clean
+          git push origin production --force
