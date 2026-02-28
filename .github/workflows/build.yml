@@ -5,6 +5,10 @@ on:
     branches: [ "main" ]   # Change to your source branch
   workflow_dispatch:
 
+# Grant write permissions to allow pushing to the production branch
+permissions:
+  contents: write
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -18,7 +22,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22   # Updated to match project requirement (>=22.12.0)
+          node-version: 22   # Matches project requirement (>=22.12.0)
           cache: 'npm'
 
       - name: Install dependencies
